@@ -1,43 +1,11 @@
 import java.net.URL;
 import java.text.NumberFormat;
-import java.text.ParseException;
 import java.util.Locale;
 import java.util.ResourceBundle;
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableBooleanValue;
 import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -57,9 +25,6 @@ import javafx.scene.effect.BoxBlur;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
-import javafx.util.StringConverter;
-import javafx.util.converter.DoubleStringConverter;
-import javafx.util.converter.NumberStringConverter;
 
 public class FXMLController implements Initializable{
 
@@ -138,14 +103,17 @@ public class FXMLController implements Initializable{
     	dragImgView = new DraggableImageView();
     	imgStackPane.getChildren().add(dragImgView);
     	dragImgView.setImgLocalisee("Javafx_logo_color.png");
-    	dragImgView.setFitHeight(450);
-    	dragImgView.setFitWidth(800);
     	dragImgView.setPreserveRatio(true);
     	dragImgView.getStyleClass().add("image");
     	
-    	//Bind the angle devices
-    	angleLabel.textProperty().bind(angleSlider.valueProperty().asString());
-    	dragImgView.rotateProperty().bind(angleSlider.valueProperty());
+    	//Add listeners to the angle slider
+    	angleSlider.valueProperty().addListener((observable, oldValue, newValue) -> 
+    	angleLabel.setText(String.valueOf(Math.round(angleSlider.getValue())) + "°")
+    			);
+    	angleSlider.valueProperty().addListener((observable, oldValue, newValue) -> 
+    	dragImgView.setRotate(angleSlider.getValue())
+    			);
+    	
     	angleLabel.textProperty().addListener(new ChangeListener()
     	{
 			@Override
@@ -157,13 +125,13 @@ public class FXMLController implements Initializable{
 		});	
     	
     	//Bind the opacity controls 	
-    	transparenceSlider.valueProperty().addListener(new ChangeListener()
+    	transparenceSlider.valueProperty().addListener(new ChangeListener<Number>()
     	{
 			@Override
-			public void changed(ObservableValue observable,
-					Object oldValue, Object newValue)
+			public void changed(ObservableValue<? extends Number> observable,
+					Number oldValue, Number newValue)
 			{
-					transparenceTextField.setText(String.valueOf(newValue));
+					transparenceTextField.setText(String.valueOf(Math.round((Double)newValue)));
 					changement.set(true);
 			}	
 		});	
@@ -226,7 +194,10 @@ public class FXMLController implements Initializable{
 			{
 				try
 				{
-					blurHeightSpinner.getValueFactory().setValue(Integer.parseInt((String)newValue));
+					if (observable == blurHeightSpinner.editorProperty().getValue().textProperty())
+						blurHeightSpinner.getValueFactory().setValue(Integer.parseInt((String)newValue));
+					else
+						blurWidthSpinner.getValueFactory().setValue(Integer.parseInt((String)newValue));	
 				}
 				catch (Exception e)
 				{
@@ -336,6 +307,11 @@ public class FXMLController implements Initializable{
     	        contextMenu.show(dragImgView, Side.TOP, dragImgView.getFitWidth()/2, dragImgView.getFitHeight()/2);
     	    }
     	});
+    	
+    	//Responsivity: Bind the image size with its container size
+    	dragImgView.fitHeightProperty().bind(imgStackPane.heightProperty());
+    	dragImgView.fitWidthProperty().bind(imgStackPane.widthProperty());
+    
     	
     }
 }
